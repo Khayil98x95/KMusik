@@ -36,9 +36,10 @@ Type a track's number and press Enter to play it.
 
 Type a key and press Enter:
 
-- `p` pauses or resumes playback
+- `p` pause
 - `s` stops playback
 - `q` quits the player
+- `r` resumes
 
 ## License
 
