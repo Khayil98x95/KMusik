@@ -36,11 +36,11 @@ def main():
     while True:
         key = input(": ").strip().lower()
         if key == "p":
-            send(["pause"])
+            send(["cycle", "pause"])
         elif key == "s":
             send(["stop"])
         elif key == "r":
-            send(["cycle"])
+            send(["set_property, "pause", False])
         elif key == "q":
             send(["quit"])
             break
