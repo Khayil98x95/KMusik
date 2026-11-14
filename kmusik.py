@@ -40,7 +40,7 @@ def main():
         elif key == "s":
             send(["stop"])
         elif key == "r":
-            send(["set_property, "pause", False])
+            send(["set_property", "pause", False])
         elif key == "q":
             send(["quit"])
             break
