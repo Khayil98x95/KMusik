@@ -28,7 +28,8 @@ def main():
     selected = tracks[choice - 1]
     
     proc = subprocess.Popen([
-        "mpv", "--no-video", "--idle", f"--input-ipc-server={SOCKET}", str(selected)
+        "mpv", "--no-video", "--idle", "--input-terminal=no", f"--input-ipc-server={SOCKET}", str(selected)
+        
     ])
     time.sleep(0.5)
     paused = False
