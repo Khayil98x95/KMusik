@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Music files (keep your library out of the repo)
+music/
+Music/
+
+# Editor and OS files
+.vscode/
+.idea/
+*.swp
+.DS_Store
