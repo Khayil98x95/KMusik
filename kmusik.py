@@ -1,4 +1,5 @@
 import subprocess
+
 import socket
 import json
 import sys
@@ -7,10 +8,16 @@ from pathlib import Path
 
 SOCKET = "/tmp/music-player-mpv.sock"
 AUDIO = {".mp3", ".flac", ".ogg", ".m4a"}
-def send(command):
-    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
-        s.connect(SOCKET)
-        s.sendall((json.dumps({"command": command}) + "\n").encode())
+def send(command, wait_reply=True):
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+            s.connect(SOCKET)
+            s.sendall((json.dumps({"command": command}) + "\n").encode())
+            if wait_reply:
+                return s.recv(4096).decode().strip()
+    except OSError as err:
+        print(f"[error] could not reach mpv: {err}")
+    return none
 
 def main():
     if len(sys.argv) < 2:
@@ -37,20 +44,31 @@ def main():
     time.sleep(0.5)
     paused = False
     print("TIPS: P for Pause, R for Resume, S for Stop, and Q for Quit")
-    while True:
-        key = input(": ").strip().lower()
-        print(f"[debug] got {key!r}")
-        if key == "p":
-            send(["cycle", "pause"])
-        elif key == "s":
-            send(["stop"])
-        elif key == "r":
-            send(["set_property", "pause", False])
-        elif key == "q":
-            send(["quit"])
-            break
+    try:
 
-    proc.wait()
+        while True:
+            key = input(": ").strip().lower()
+            if key == "p":
+                send(["cycle", "pause"])
+            elif key == "s":
+                send(["stop"])
+            elif key == "r":
+                send(["set_property", "pause", False])
+            elif key == "q":
+                break
+            elif key:
+                print("Keys: p, r, s, q")
+    except (KeyboardInterrupt, EOFError):
+        print()
+
+    if proc.poll() is None:
+        send(["quit"], wait_reply=False)
+        try:
+            proc.wait(timeout=1)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+        if os.path.exists(SOCKET):
+            os.remove(SOCKET)
 
 if __name__ == "__main__":
     main()
