@@ -40,6 +40,7 @@ Type a key and press Enter:
 - `s` stops playback
 - `q` quits the player
 - `r` resumes
+(Oh, yeah. To exit you need to press ^V(Ctrl+V), type q and enter)
 
 ## License
 
