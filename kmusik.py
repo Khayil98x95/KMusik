@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import subprocess
 import os
 import socket
@@ -44,9 +45,9 @@ def main():
             selected = tracks[choice - 1]
             break
         print(f"Please choose a number from 1 to {len(tracks)}")
-   
+    playlist = [str(t) for t in tracks[choice - 1:]]
     proc = subprocess.Popen([
-        "mpv", "--no-video", f"--input-ipc-server={SOCKET}", str(selected)
+        "mpv", "--no-video", "--idle", f"--input-ipc-server={SOCKET}", *playlist,
         
     ])
     time.sleep(0.5)
