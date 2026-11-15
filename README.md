@@ -2,6 +2,8 @@
 
 A simple CLI terminal music player for Linux. Point it at a folder of local audio files, pick a track from the list, and it plays using mpv. No ads, no accounts.
 
+![KMusik running in a terminal](docs/screenshot.png)
+
 ## Features
 
 - Scans a folder for MP3, FLAC, OGG, and M4A files
