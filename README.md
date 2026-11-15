@@ -31,8 +31,6 @@ cd KMusik
 
 Do not run the installer with `sudo`. It installs the command into your own `~/.local/bin` and adds that folder to your PATH if needed. Open a new terminal afterward (or run `source ~/.bashrc`).
 
-To uninstall, run `./uninstall.sh`.
-
 ## Usage
 
 ```bash
