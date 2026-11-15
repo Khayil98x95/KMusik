@@ -22,6 +22,10 @@ Install mpv on Debian or Ubuntu:
 ```bash
 sudo apt install mpv
 ```
+Or, you can install on Arch:
+```bash
+sudo pacman -S mpv
+```
 
 ## Install
 
