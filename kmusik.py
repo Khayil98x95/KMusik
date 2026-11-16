@@ -13,7 +13,7 @@ from pathlib import Path
 SOCKET = "/tmp/music-player-mpv.sock"
 AUDIO = {".mp3", ".flac", ".ogg", ".m4a"}
 def message(text):
-    print(f"\r\o33[K{text}")
+    print(f"\r\033[K{text}")
 def get_prop(name):
     try:
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
@@ -108,7 +108,7 @@ def main():
                 elif key == "l":
                     loop_track = not loop_track
                     send(["set_property", "loop-file", "inf" if loop_track else "no"])
-                    message("Loop: " ("on" if loop_track else "off"))
+                    message("Loop: " + ("on" if loop_track else "off"))
                 elif key == "q":
                     break
             draw_bar()
