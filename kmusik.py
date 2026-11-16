@@ -2,6 +2,8 @@
 import subprocess
 import os
 import socket
+import termios
+import tty
 import json
 import sys
 import time
@@ -10,6 +12,8 @@ from pathlib import Path
 
 SOCKET = "/tmp/music-player-mpv.sock"
 AUDIO = {".mp3", ".flac", ".ogg", ".m4a"}
+def message(text):
+    print(f"\r\o33[K{text}")
 def get_prop(name):
     try:
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
@@ -31,14 +35,14 @@ def fmt(seconds):
     return f"{minutes}:{secs:02d}"
 
 
-def draw_bar(width=30):
+def draw_bar(width=30):  
     pos = get_prop("time-pos")
     dur = get_prop("duration")
     if pos is None or not dur:
         return
     i = min(width - 1, int(width * pos / dur))
     bar = "-" * i + ">" + "-" * (width - i - 1)
-    print(f"\r|{bar}| {fmt(pos)} / {fmt(dur)}  ", end="", flush=True)
+    print(f"\r|{bar}| {fmt(pos)} / {fmt(dur)}\033[K", end="", flush=True)
 def send(command, wait_reply=True):
     try:
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
@@ -81,26 +85,37 @@ def main():
     ])
     time.sleep(0.5)
     paused = False
-    print("TIPS: P for Pause, R for Resume, S for Stop, and Q for Quit")
+    loop_track = False
+    print("TIPS: P for Pause, R for Resume, S for Stop, N for Next, L for Loop track, and Q for Quit")
+    old_settings = termios.tcgetattr(sys.stdin)
     try:
+        tty.setcbreak(sys.stdin.fileno())
         while proc.poll() is None:
             ready, _, _ = select.select([sys.stdin], [], [], 0.5)
             if ready:
-                line = sys.stdin.readline()
-                if line == "":
+                ch = sys.stdin.read(1)
+                if ch == "":
                     break
-                key = line.strip().lower()
+                key = ch.lower()
                 if key == "p":
                     send(["cycle", "pause"])
                 elif key == "r":
                     send(["set_property", "pause", False])
                 elif key == "s":
                     send(["stop"])
+                elif key == "n":
+                    send(["playlist-next"])
+                elif key == "l":
+                    loop_track = not loop_track
+                    send(["set_property", "loop-file", "inf" if loop_track else "no"])
+                    message("Loop: " ("on" if loop_track else "off"))
                 elif key == "q":
                     break
             draw_bar()
     except KeyboardInterrupt:
         print()
+    finally:
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 
     if proc.poll() is None:
         send(["quit"], wait_reply=False)
