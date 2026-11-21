@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import subprocess
 import os
+import shutil
 import socket
 import termios
 import tty
@@ -10,7 +11,9 @@ import time
 import select
 from pathlib import Path
 
-SOCKET = "/tmp/music-player-mpv.sock"
+SOCKET = os.path.join(
+        os.environ.get("XDG_RUNTIME_DIR", "/tmp"), f"kmusik-{os.getpid()}.sock"
+        )
 AUDIO = {".mp3", ".flac", ".ogg", ".m4a"}
 def message(text):
     print(f"\r\033[K{text}")
@@ -24,7 +27,7 @@ def get_prop(name):
             data = s.recv(4096).decode()
         for line in data.splitlines():
             msg = json.loads(line)
-            if "error" in msg:
+            if msg.get("error") == "success":
                 return msg.get("data")
     except (OSError, ValueError):
         pass
@@ -60,6 +63,11 @@ def main():
         return
 
     folder = Path(sys.argv[1]).expanduser()
+
+    if shutil.which("mpv") is None:
+        sys.exit("mpv is not installed...")
+    if not folder.is_dir():
+        sys.exit(f"Not a folder: {folder}")
     tracks = sorted(p for p in folder.iterdir() if p.suffix.lower() in AUDIO)
 
     if not tracks:
@@ -80,13 +88,22 @@ def main():
         print(f"Please choose a number from 1 to {len(tracks)}")
     playlist = [str(t) for t in tracks[choice - 1:]]
     proc = subprocess.Popen([
-        "mpv", "--no-video", "--idle", "--no-terminal", f"--input-ipc-server={SOCKET}", *playlist,
+        "mpv", "--no-video", "--no-terminal", f"--input-ipc-server={SOCKET}", *playlist,
         
     ])
-    time.sleep(0.5)
+    for _ in range(50):
+        if Path(SOCKET).exists():
+            break
+        time.sleep(0.1)
     paused = False
     loop_track = False
-    print("TIPS: P for Pause, R for Resume, S for Stop, N for Next, L for Loop track, and Q for Quit")
+    print("CONTROLS:")
+    print("P = Pause")
+    print("R = Resume")
+    print("S = Stop")
+    print("N = Next")
+    print("B = Back")
+    print("L = Loop")
     old_settings = termios.tcgetattr(sys.stdin)
     try:
         tty.setcbreak(sys.stdin.fileno())
@@ -105,6 +122,8 @@ def main():
                     send(["stop"])
                 elif key == "n":
                     send(["playlist-next"])
+                elif key == "b":
+                    send(["playlist-prev"])
                 elif key == "l":
                     loop_track = not loop_track
                     send(["set_property", "loop-file", "inf" if loop_track else "no"])
